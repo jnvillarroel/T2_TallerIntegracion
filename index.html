@@ -95,7 +95,7 @@
                 </div>
                 <div id="chat_respuesta" class="mx-3 p-2 overflow-auto" style="height: 45%; display:flex; justify-content: center;">
                   <div id="input_chat" class="container h-25 w-100"></div>
-                  <button class=" btn btn-secondary active h-15" onclick="respuesta_texto(question_id,document.getElementById('texto').value)" >Enviar!</button>
+                  <button class=" btn btn-secondary active" style="height: 40px;" onclick="respuesta_texto(question_id,document.getElementById('texto').value)" >Enviar!</button>
                 
                 </div>
                 <!-- CHAT -->
@@ -139,6 +139,7 @@ let socket = new WebSocket("wss://trivia.tallerdeintegracion.cl/connect");
 var trivia_id = 0;
 var joined = 0;
 var question_id = 0;
+var question_type = 0
 // Listen for messages
 socket.addEventListener('message', function (event) {
   console.log('Message from server ', event.data);
@@ -171,6 +172,7 @@ socket.onmessage = function(event) {
     refresh_timer(data)
   }
   else if (data.type=='question'){
+    question_type = data.question_type
     refresh_question(data)
   }
   else if (data.type=='result'){
@@ -219,7 +221,6 @@ function respuesta_texto(question_id, texto){
   socket.send(msg)
 }
 
-
 function inscripcion_user(name) {
   console.log(name)
   if (name == ''){
@@ -262,13 +263,25 @@ function refresh_game(data) {
 
 function refresh_result(data) {
   $("#game").show();
-  $("#pool_respuestas").hide()
-  $("#resultado").show()
-  if (data.correct == true){
-    $("#resultado").html("<h1 class='text-success'>Correcto!</h1>")
+  if (question_type == "chat"){
+    if (data.correct == true){
+      $("#pool_respuestas").hide()
+      $("#resultado").show()
+      $("#resultado").html("<h1 class='text-success'>Correcto!</h1>")
+    }
+    else{
+      $("#input_chat").html('<input type="text" id="texto"  class="form-control" placeholder="Ingesa tu respuesta!"><br>')
+    }
   }
-  else if (data.correct == false){
-    $("#resultado").html("<h1 class='text-danger'>Haz fallado!</h1>")
+  else {
+    $("#pool_respuestas").hide()
+    $("#resultado").show()
+    if (data.correct == true){
+      $("#resultado").html("<h1 class='text-success'>Correcto!</h1>")
+    }
+    else if (data.correct == false){
+      $("#resultado").html("<h1 class='text-danger'>Haz fallado!</h1>")
+    }
   }
   
 
