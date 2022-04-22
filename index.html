@@ -14,11 +14,12 @@
       <div class="container shadow-lg min-vh-100 my-4 py-5 bg-light text-center">
         <br><br><br><br>
         <h1 style="font-size: 60px;" class="my-5">INTEGRATION TRIVIA</h1>
+        <p id="message" style="color: red;"></p>
         <form style="display: flex;align-items: center;justify-content: center;" class="mt-5">
           <div class="form-group w-50 p-4 m-3 content">
             <input  type="text" class="form-control text-center" id="name"  placeholder="Ingresa tu nombre de usuario">
           </div>
-          <button  type="button" class="btn btn-secondary" onclick="inscripcion_user(document.getElementById('name').value)">Ingresar</button>
+          <button  type="button" class="btn btn-secondary h-14" onclick="inscripcion_user(document.getElementById('name').value)">Ingresar</button>
         </form>
       </div>
     </div>
@@ -30,7 +31,7 @@
         <h1 style="text-align: center; font-size: 60px;">LOBBY</h1>
         <h3 id="timer" style="text-align: center; font-size: 30px;" class="m-3"></h3>
 
-        <div id="players_lobby" style="text-align:center; align-items: center; font-size:35px; background: rgba(219, 216, 216, 0.7); border-radius:10px;  display:flex; flex-wrap:wrap;" class="m-5 p-5 align-content"></div>
+        <div id="players_lobby" style="text-align:center; align-items: center; font-size:35px; background: rgba(219, 216, 216, 0.7); border-radius:10px;  display:flex; flex-wrap:wrap;" class="m-5 p-5 align-content overflow-auto"></div>
       </div>
     </div>
     <!-- LOBBY -->
@@ -82,21 +83,30 @@
                     <div class="form-group w-100 p-4"  id="input_space" style="display: flex;align-items: center;justify-content: center;">
                       <!-- <input type="answer" class="form-control" id="texto" placeholder="Ingresa tu respuesta"> -->
                     </div>
-                    <button type="button" class="btn btn-secondary active btn-lg" onclick="respuesta_texto(question_id, texto)">Enviar!</button>
+                    <button type="button" class="btn btn-secondary active btn-lg" onclick="respuesta_texto(question_id,document.getElementById('texto').value)">Enviar!</button>
                   </form>
                 </div>
                 <!-- TEXTO -->
-                <!-- CHAT -->
-                <div id="chat">
 
+
+                <!-- CHAT -->
+                <div id="chat" class="mx-3 p-2" style="background-color: rgba(219, 216, 216, 0.7); height: 45%; display:flex; justify-content: center;">
+                  <div class="container h-75 w-100 overflow-auto" id="comments" style="background-color: rgba(219, 216, 216, 0.7);"></div> <br>
+                </div>
+                <div id="chat_respuesta" class="mx-3 p-2 overflow-auto" style="height: 45%; display:flex; justify-content: center;">
+                  <div id="input_chat" class="container h-25 w-100"></div>
+                  <button class=" btn btn-secondary active h-15" onclick="respuesta_texto(question_id,document.getElementById('texto').value)" >Enviar!</button>
+                
                 </div>
                 <!-- CHAT -->
+
+
               </div>
               <div id="resultado" class="pt-5" style="text-align: center; font-size: x-large;"></div>
             </div>
           </div>
           <div class="col-4">
-            <div id="scoreboard" class="container-m p-4 btn-secondary" style="height: 640;"></div>
+            <div id="scoreboard" class="container-m p-4 btn-secondary overflow-auto" style="height: 640;"></div>
           </div>
         </div>
       </div>
@@ -149,6 +159,7 @@ socket.onmessage = function(event) {
   }
   else if (data.type=='lobby'){
     $("#front_page").hide();
+    $("#podio_titulos").html(""); //Reseteo el podio
     refresh_lobby(data);
   }
   else if (data.type=='score'){
@@ -175,6 +186,13 @@ socket.onmessage = function(event) {
     $("#front_page").show();
     $("#game").hide();
     $("#high_scores").hide();
+    $("#mensaje").text(data.message);
+    $("#mensaje").show().delay(5000).fadeOut();
+    $("#mensaje").text("");
+  }
+  else if(data.type == "chat"){
+    $("#comments").append('<div class="row"><p>'+data.timestamp.slice(11,-7)+' - '+data.username+':  '+data.message+'</p></div>')
+    
   }
 
 };
@@ -185,7 +203,6 @@ function refresh_highscore(data){
   $("#titulo").text("GANADORES TRIVIA "+ trivia_id)
   // $("#podio_titulos").html('')
   // $("#podio").append('<div class="row"> <div class="col-3"><p>Place2</p></div> <div class="col-6"><p>Username2</p></div> <div class="col-3"><p>Score2</p></div> </div>')
-  $("#podio").html("");
   for (var i =0 ; i < 3; i++) {
     var jugador = '<div class="row mt-5"> <div class="col" style="text-align: center;" ><h4 style="color: rgba(69, 66, 66, 0.7);">#'+(i+1)+'</h4></div> <div class="col" style="text-align: center;" ><h4 style="color: rgba(69, 66, 66, 0.7);">'+data.winners[i].username+'</h4></div> <div class="col" style="text-align: center;" ><h4 style="color: rgba(69, 66, 66, 0.7);">'+data.winners[i].score+'</h4></div> </div><br>';
     $("#podio_titulos").append(jugador);
@@ -197,13 +214,11 @@ function refresh_streak(data){
 }
 
 function respuesta_texto(question_id, texto){
+  console.log(texto)
   var msg = JSON.stringify({'type':"answer",'question_id': question_id,'value': texto});
   socket.send(msg)
 }
 
-function respuesta_chat(message){
-  $("#chat").html("")
-}
 
 function inscripcion_user(name) {
   console.log(name)
@@ -263,15 +278,18 @@ function refresh_timer(data){
   $("#timer_game").text("TIME LEFT: " + data.seconds_remaining);
 }
 function refresh_question(data){
+  $("#chat").hide()
+  $("#chat_respuesta").hide()
+  $("#input_chat").hide()
+  $("#button").hide()
+  $("#text").hide()
+  $("#resultado").hide()
+  $("#comments").html("")
   question_id = data.question_id;
   $("#question").text("QUESTION: " + (data.question_id+1));
   $("#question_title").text(data.question_title);
   $("#question_title").show()
   $("#pool_respuestas").show()
-  $("#chat").hide()
-    $("#button").hide()
-    $("#text").hide()
-  $("#resultado").hide()
 
   if (data.question_type == 'button'){
     $("#button").show()
@@ -283,14 +301,16 @@ function refresh_question(data){
   }
   else if (data.question_type == 'text'){
     $("#text").show()
-    $("#input_space").html('<input type="answer" class="form-control" id="texto" placeholder="Ingresa tu respuesta">')
+    $("#input_space").html('<input type="text" class="form-control" id="texto" placeholder="Ingresa tu respuesta">')
   }
   else if (data.question_type == 'chat'){
+    console.log(data)
     $("#chat").show()
+    $("#chat_respuesta").show()
+    $("#input_chat").show()
+    $("#input_chat").html('<input type="text" id="texto"  class="form-control" placeholder="Ingesa tu respuesta!"><br>')
   }
 }
  
 </script>
 
-<!-- <div class="col">'+data.scores[i].property+'</div> <div class="col">'+data.scores[i].property+'</div> -->
-<!-- <div class="row"> <div class="col">'+i+'</div> </div> -->
