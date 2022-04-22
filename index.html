@@ -208,7 +208,7 @@ function respuesta_chat(message){
 function inscripcion_user(name) {
   console.log(name)
   if (name == ''){
-    name = "jnvillarroel"
+    name = "Jaime Villarroel"
   }
   var msg = JSON.stringify({'type':'join','id':'6aca7189-ed9f-4836-8021-34ef45fa9800','username': name});
   socket.send(msg);
