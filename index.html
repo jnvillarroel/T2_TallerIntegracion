@@ -159,6 +159,7 @@ socket.onmessage = function(event) {
     console.log('Message from server ', event.data);
   }
   else if (data.type=='lobby'){
+    $("#high_scores").hide();
     $("#front_page").hide();
     $("#podio_titulos").html(""); //Reseteo el podio
     refresh_lobby(data);
@@ -299,7 +300,7 @@ function refresh_question(data){
   $("#resultado").hide()
   $("#comments").html("")
   question_id = data.question_id;
-  $("#question").text("QUESTION: " + (data.question_id+1));
+  $("#question").text("QUESTION: " + (data.question_id));
   $("#question_title").text(data.question_title);
   $("#question_title").show()
   $("#pool_respuestas").show()
